@@ -112,6 +112,31 @@ def check_env_file(ssh: paramiko.SSHClient) -> bool:
     return result == "exists"
 
 
+def clean_remote_directory(ssh: paramiko.SSHClient):
+    """清理远程目录，保留 .env 文件"""
+    print("\n清理云端文件（保留 .env）...")
+    
+    # 备份 .env，清理目录，恢复 .env
+    commands = f"""
+    if [ -f {REMOTE_PATH}/.env ]; then
+        cp {REMOTE_PATH}/.env /tmp/.env.backup
+    fi
+    rm -rf {REMOTE_PATH}/*
+    rm -rf {REMOTE_PATH}/.[!.]*
+    mkdir -p {REMOTE_PATH}
+    if [ -f /tmp/.env.backup ]; then
+        mv /tmp/.env.backup {REMOTE_PATH}/.env
+    fi
+    """
+    
+    stdin, stdout, stderr = ssh.exec_command(commands)
+    stdout.read()
+    err = stderr.read().decode()
+    if err and "No such file" not in err:
+        print(f"清理警告: {err}")
+    print("云端文件清理完成!")
+
+
 def main():
     local_path = Path(__file__).parent
 
@@ -147,6 +172,9 @@ def main():
             else:
                 print("警告: 本地 .env.local 文件不存在!")
                 return
+
+        # 清理云端旧文件（保留 .env）
+        clean_remote_directory(ssh)
         
         # 创建 SFTP 客户端
         sftp = ssh.open_sftp()
