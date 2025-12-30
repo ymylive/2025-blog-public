@@ -47,7 +47,7 @@ export async function pushSiteContent(
 		const contentBase64 = await fileToBase64NoPrefix(avatarItem.file)
 		const blobData = await createBlob(contentBase64, 'base64')
 		treeItems.push({
-			path: 'public/images/avatar.png',
+			path: 'public/images/avatar.jpg',
 			mode: '100644',
 			type: 'blob',
 			sha: blobData.sha

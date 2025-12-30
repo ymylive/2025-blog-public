@@ -61,17 +61,10 @@ export default function Page() {
 		}
 		handleSave()
 	}
-	}
 
 	const handleCancel = () => {
 		setSnippets(originalSnippets)
 		setIsEditMode(false)
-	}
-
-	 catch (error) {
-			console.error('Failed to read private key:', error)
-			toast.error('读取密钥文件失败')
-		}
 	}
 
 	const openManageDialog = () => {
@@ -115,18 +108,6 @@ export default function Page() {
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const file = e.target.files?.[0]
-					if (file) await handleChoosePrivateKey(file)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
-
 			<div className='flex min-h-[70vh] flex-col items-center justify-center px-6 py-24'>
 				<div className='w-full max-w-3xl text-center'>
 					<p className='text-2xl leading-relaxed font-semibold'>{currentSnippet || '无'}</p>

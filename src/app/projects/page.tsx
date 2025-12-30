@@ -54,19 +54,12 @@ export default function Page() {
 		}
 	}
 
-	 catch (error) {
-			console.error('Failed to read private key:', error)
-			toast.error('读取密钥文件失败')
-		}
-	}
-
 	const handleSaveClick = () => {
 		if (!isAuthenticated) {
 			toast.error('请先登录')
 			return
 		}
 		handleSave()
-	}
 	}
 
 	const handleSave = async () => {
@@ -114,18 +107,6 @@ export default function Page() {
 
 	return (
 		<>
-			<input
-				ref={keyInputRef}
-				type='file'
-				accept='.pem'
-				className='hidden'
-				onChange={async e => {
-					const f = e.target.files?.[0]
-					if (f) await handleChoosePrivateKey(f)
-					if (e.currentTarget) e.currentTarget.value = ''
-				}}
-			/>
-
 			<div className='flex flex-col items-center justify-center px-6 pt-32 pb-12'>
 				<div className='grid w-full max-w-[1200px] grid-cols-2 gap-6 max-md:grid-cols-1'>
 					{projects.map((project, index) => (

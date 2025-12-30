@@ -11,6 +11,7 @@ import { useAuthStore } from '@/hooks/use-auth'
 import { useConfigStore } from '@/app/(home)/stores/config-store'
 import type { ImageItem } from '../projects/components/image-upload-dialog'
 import { useRouter } from 'next/navigation'
+import AdminLoginDialog from '@/components/admin-login-dialog'
 
 export interface Picture {
 	id: string
@@ -27,6 +28,7 @@ export default function Page() {
 	const [isSaving, setIsSaving] = useState(false)
 	const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false)
 	const [imageItems, setImageItems] = useState<Map<string, ImageItem>>(new Map())
+	const [showLoginDialog, setShowLoginDialog] = useState(false)
 	const router = useRouter()
 
 	const { isAuthenticated } = useAuthStore()
@@ -156,7 +158,7 @@ export default function Page() {
 
 	const handleSaveClick = () => {
 		if (!isAuthenticated) {
-			toast.error('请先登录')
+			setShowLoginDialog(true)
 			return
 		}
 		handleSave()
@@ -259,6 +261,7 @@ export default function Page() {
 			</motion.div>
 
 			{isUploadDialogOpen && <UploadDialog onClose={() => setIsUploadDialogOpen(false)} onSubmit={handleUploadSubmit} />}
+			<AdminLoginDialog open={showLoginDialog} onClose={() => setShowLoginDialog(false)} />
 		</>
 	)
 }

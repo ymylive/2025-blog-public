@@ -135,12 +135,18 @@ def main():
         stdin, stdout, stderr = ssh.exec_command(f"mkdir -p {REMOTE_PATH}")
         stdout.read()
 
-        # 检查 .env 文件
+        # 检查并上传 .env 文件
         if not check_env_file(ssh):
-            print("\n警告: VPS 上未找到 .env 文件!")
-            print("请先在 VPS 上创建 .env 文件并配置所需的环境变量")
-            print(f"位置: {REMOTE_PATH}/.env")
-            return
+            print("\n VPS 上未找到 .env 文件，正在从本地上传...")
+            local_env = local_path / ".env.local"
+            if local_env.exists():
+                sftp = ssh.open_sftp()
+                sftp.put(str(local_env), f"{REMOTE_PATH}/.env")
+                sftp.close()
+                print(".env 文件上传成功!")
+            else:
+                print("警告: 本地 .env.local 文件不存在!")
+                return
         
         # 创建 SFTP 客户端
         sftp = ssh.open_sftp()
