@@ -1,6 +1,4 @@
 import { toBase64Utf8, getRef, createTree, createCommit, updateRef, createBlob, type TreeItem } from '@/lib/github-client'
-import { getAuthToken } from '@/lib/auth'
-import { GITHUB_CONFIG } from '@/consts'
 import { toast } from 'sonner'
 import { fileToBase64NoPrefix } from '@/lib/file-utils'
 import type { SiteContent, CardStyles } from '../stores/config-store'
@@ -20,10 +18,8 @@ export async function pushSiteContent(
 	removedBackgroundImages?: BackgroundImageConfig[],
 	socialButtonImageUploads?: SocialButtonImageUploads
 ): Promise<void> {
-	const token = await getAuthToken()
-
 	toast.info('正在获取分支信息...')
-	const refData = await getRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`)
+	const refData = await getRef('heads/main')
 	const latestCommitSha = refData.sha
 
 	const commitMessage = `更新站点配置`
@@ -36,7 +32,7 @@ export async function pushSiteContent(
 	if (faviconItem?.type === 'file') {
 		toast.info('正在上传 Favicon...')
 		const contentBase64 = await fileToBase64NoPrefix(faviconItem.file)
-		const blobData = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, contentBase64, 'base64')
+		const blobData = await createBlob(contentBase64, 'base64')
 		treeItems.push({
 			path: 'public/favicon.png',
 			mode: '100644',
@@ -49,7 +45,7 @@ export async function pushSiteContent(
 	if (avatarItem?.type === 'file') {
 		toast.info('正在上传 Avatar...')
 		const contentBase64 = await fileToBase64NoPrefix(avatarItem.file)
-		const blobData = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, contentBase64, 'base64')
+		const blobData = await createBlob(contentBase64, 'base64')
 		treeItems.push({
 			path: 'public/images/avatar.png',
 			mode: '100644',
@@ -73,7 +69,7 @@ export async function pushSiteContent(
 
 			toast.info(`正在上传 Art 图片 ${id}...`)
 			const contentBase64 = await fileToBase64NoPrefix(item.file)
-			const blobData = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, contentBase64, 'base64')
+			const blobData = await createBlob(contentBase64, 'base64')
 			treeItems.push({
 				path,
 				mode: '100644',
@@ -114,7 +110,7 @@ export async function pushSiteContent(
 
 			toast.info(`正在上传背景图片 ${id}...`)
 			const contentBase64 = await fileToBase64NoPrefix(item.file)
-			const blobData = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, contentBase64, 'base64')
+			const blobData = await createBlob(contentBase64, 'base64')
 			treeItems.push({
 				path,
 				mode: '100644',
@@ -158,7 +154,7 @@ export async function pushSiteContent(
 
 			toast.info(`正在上传社交按钮图片 ${buttonId}...`)
 			const contentBase64 = await fileToBase64NoPrefix(item.file)
-			const blobData = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, contentBase64, 'base64')
+			const blobData = await createBlob(contentBase64, 'base64')
 			treeItems.push({
 				path,
 				mode: '100644',
@@ -170,7 +166,7 @@ export async function pushSiteContent(
 
 	// Handle site content JSON
 	const siteContentJson = JSON.stringify(siteContent, null, '\t')
-	const siteContentBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(siteContentJson), 'base64')
+	const siteContentBlob = await createBlob(toBase64Utf8(siteContentJson), 'base64')
 	treeItems.push({
 		path: 'src/config/site-content.json',
 		mode: '100644',
@@ -180,7 +176,7 @@ export async function pushSiteContent(
 
 	// Handle card styles JSON
 	const cardStylesJson = JSON.stringify(cardStyles, null, '\t')
-	const cardStylesBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(cardStylesJson), 'base64')
+	const cardStylesBlob = await createBlob(toBase64Utf8(cardStylesJson), 'base64')
 	treeItems.push({
 		path: 'src/config/card-styles.json',
 		mode: '100644',
@@ -189,13 +185,13 @@ export async function pushSiteContent(
 	})
 
 	toast.info('正在创建文件树...')
-	const treeData = await createTree(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, treeItems, latestCommitSha)
+	const treeData = await createTree(treeItems, latestCommitSha)
 
 	toast.info('正在创建提交...')
-	const commitData = await createCommit(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, commitMessage, treeData.sha, [latestCommitSha])
+	const commitData = await createCommit(commitMessage, treeData.sha, [latestCommitSha])
 
 	toast.info('正在更新分支...')
-	await updateRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`, commitData.sha)
+	await updateRef('heads/main', commitData.sha)
 
 	toast.success('保存成功！')
 }

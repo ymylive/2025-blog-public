@@ -28,12 +28,11 @@ export default function BlogPage() {
 	const { items, loading } = useBlogIndex()
 	const { categories: categoriesFromServer } = useCategories()
 	const { isRead } = useReadArticles()
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuthenticated } = useAuthStore()
 	const { siteContent } = useConfigStore()
 	const hideEditButton = siteContent.hideEditButton ?? false
 	const enableCategories = siteContent.enableCategories ?? false
 
-	const keyInputRef = useRef<HTMLInputElement>(null)
 	const [editMode, setEditMode] = useState(false)
 	const [editableItems, setEditableItems] = useState<BlogIndexItem[]>([])
 	const [selectedSlugs, setSelectedSlugs] = useState<Set<string>>(new Set())
@@ -125,7 +124,7 @@ export default function BlogPage() {
 	}, [displayItems, displayMode, categoryList])
 
 	const selectedCount = selectedSlugs.size
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuthenticated ? '保存' : '请先登录'
 
 	const toggleEditMode = useCallback(() => {
 		if (editMode) {
@@ -275,12 +274,12 @@ export default function BlogPage() {
 	}, [items, editableItems, categoryList, categoriesFromServer])
 
 	const handleSaveClick = useCallback(() => {
-		if (!isAuth) {
+		if (!isAuthenticated) {
 			keyInputRef.current?.click()
 			return
 		}
 		void handleSave()
-	}, [handleSave, isAuth])
+	}, [handleSave, isAuthenticated])
 
 	const handlePrivateKeySelection = useCallback(
 		async (file: File) => {

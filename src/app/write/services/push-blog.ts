@@ -1,8 +1,6 @@
 import { toBase64Utf8, getRef, createTree, createCommit, updateRef, createBlob, type TreeItem } from '@/lib/github-client'
 import { fileToBase64NoPrefix, hashFileSHA256 } from '@/lib/file-utils'
 import { prepareBlogsIndex } from '@/lib/blog-index'
-import { getAuthToken } from '@/lib/auth'
-import { GITHUB_CONFIG } from '@/consts'
 import type { ImageItem } from '../types'
 import { getFileExt } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -34,11 +32,8 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
 		throw new Error('编辑模式下不支持修改 slug，请保持原 slug 不变')
 	}
 
-	// 获取认证 token（自动从全局认证状态获取）
-	const token = await getAuthToken()
-
 	toast.info('正在获取分支信息...')
-	const refData = await getRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`)
+	const refData = await getRef(`heads/main`)
 	const latestCommitSha = refData.sha
 
 	const basePath = `public/blogs/${form.slug}`
@@ -81,7 +76,7 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
 				const path = `${basePath}/${filename}`
 				const contentBase64 = await fileToBase64NoPrefix(img.file)
 				// create blob for image
-				const blobData = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, contentBase64, 'base64')
+				const blobData = await createBlob(contentBase64, 'base64')
 				treeItems.push({
 					path,
 					mode: '100644',
@@ -110,7 +105,7 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
 	toast.info('正在创建文件...')
 
 	// create blob for index.md
-	const mdBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(mdToUpload), 'base64')
+	const mdBlob = await createBlob(toBase64Utf8(mdToUpload), 'base64')
 	treeItems.push({
 		path: `${basePath}/index.md`,
 		mode: '100644',
@@ -130,7 +125,7 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
 		category: form.category
 	}
 
-	const configBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(JSON.stringify(config, null, 2)), 'base64')
+	const configBlob = await createBlob(toBase64Utf8(JSON.stringify(config, null, 2)), 'base64')
 	treeItems.push({
 		path: `${basePath}/config.json`,
 		mode: '100644',
@@ -139,23 +134,17 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
 	})
 
 	// prepare and create blob for blogs index
-	const indexJson = await prepareBlogsIndex(
-		token,
-		GITHUB_CONFIG.OWNER,
-		GITHUB_CONFIG.REPO,
-		{
-			slug: form.slug,
-			title: form.title,
-			tags: form.tags,
-			date: dateStr,
-			summary: form.summary,
-			cover: coverPath,
-			hidden: form.hidden,
-			category: form.category
-		},
-		GITHUB_CONFIG.BRANCH
-	)
-	const indexBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(indexJson), 'base64')
+	const indexJson = await prepareBlogsIndex({
+		slug: form.slug,
+		title: form.title,
+		tags: form.tags,
+		date: dateStr,
+		summary: form.summary,
+		cover: coverPath,
+		hidden: form.hidden,
+		category: form.category
+	})
+	const indexBlob = await createBlob(toBase64Utf8(indexJson), 'base64')
 	treeItems.push({
 		path: 'public/blogs/index.json',
 		mode: '100644',
@@ -165,15 +154,15 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
 
 	// create tree
 	toast.info('正在创建文件树...')
-	const treeData = await createTree(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, treeItems, latestCommitSha)
+	const treeData = await createTree(treeItems, latestCommitSha)
 
 	// create commit
 	toast.info('正在创建提交...')
-	const commitData = await createCommit(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, commitMessage, treeData.sha, [latestCommitSha])
+	const commitData = await createCommit(commitMessage, treeData.sha, [latestCommitSha])
 
 	// update branch reference
 	toast.info('正在更新分支...')
-	await updateRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`, commitData.sha)
+	await updateRef(`heads/main`, commitData.sha)
 
 	toast.success('发布成功！')
 }

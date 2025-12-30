@@ -21,9 +21,7 @@ export default function Page() {
 	const [isManageOpen, setIsManageOpen] = useState(false)
 	const [draftSnippets, setDraftSnippets] = useState<string[]>([])
 	const [newSnippet, setNewSnippet] = useState('')
-	const keyInputRef = useRef<HTMLInputElement>(null)
-
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuthenticated } = useAuthStore()
 	const { siteContent } = useConfigStore()
 	const hideEditButton = siteContent.hideEditButton ?? false
 
@@ -57,11 +55,12 @@ export default function Page() {
 	}
 
 	const handleSaveClick = () => {
-		if (!isAuth) {
-			keyInputRef.current?.click()
-		} else {
-			void handleSave()
+		if (!isAuthenticated) {
+			toast.error('请先登录')
+			return
 		}
+		handleSave()
+	}
 	}
 
 	const handleCancel = () => {
@@ -69,12 +68,7 @@ export default function Page() {
 		setIsEditMode(false)
 	}
 
-	const handleChoosePrivateKey = async (file: File) => {
-		try {
-			const text = await file.text()
-			await setPrivateKey(text)
-			await handleSave()
-		} catch (error) {
+	 catch (error) {
 			console.error('Failed to read private key:', error)
 			toast.error('读取密钥文件失败')
 		}
@@ -117,7 +111,7 @@ export default function Page() {
 		setNewSnippet('')
 	}
 
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuthenticated ? '保存' : '请先登录'
 
 	return (
 		<>

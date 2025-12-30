@@ -9,14 +9,13 @@ import { usePublish } from '../hooks/use-publish'
 export function WriteActions() {
 	const { loading, mode, form, loadBlogForEdit, originalSlug, updateForm } = useWriteStore()
 	const { openPreview } = usePreviewStore()
-	const { isAuth, onChoosePrivateKey, onPublish, onDelete } = usePublish()
+	const { isAuthenticated, onChoosePrivateKey, onPublish, onDelete } = usePublish()
 	const [saving, setSaving] = useState(false)
-	const keyInputRef = useRef<HTMLInputElement>(null)
 	const mdInputRef = useRef<HTMLInputElement>(null)
 	const router = useRouter()
 
 	const handleImportOrPublish = () => {
-		if (!isAuth) {
+		if (!isAuthenticated) {
 			keyInputRef.current?.click()
 		} else {
 			onPublish()
@@ -34,10 +33,10 @@ export function WriteActions() {
 		}
 	}
 
-	const buttonText = isAuth ? (mode === 'edit' ? '更新' : '发布') : '导入密钥'
+	const buttonText = isAuthenticated ? (mode === 'edit' ? '更新' : '发布') : '导入密钥'
 
 	const handleDelete = () => {
-		if (!isAuth) {
+		if (!isAuthenticated) {
 			toast.info('请先导入密钥')
 			return
 		}

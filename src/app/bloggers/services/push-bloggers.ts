@@ -1,7 +1,5 @@
 import { toBase64Utf8, getRef, createTree, createCommit, updateRef, createBlob, type TreeItem } from '@/lib/github-client'
 import { fileToBase64NoPrefix, hashFileSHA256 } from '@/lib/file-utils'
-import { getAuthToken } from '@/lib/auth'
-import { GITHUB_CONFIG } from '@/consts'
 import type { Blogger } from '../grid-view'
 import type { AvatarItem } from '../components/avatar-upload-dialog'
 import { getFileExt } from '@/lib/utils'
@@ -16,10 +14,8 @@ export async function pushBloggers(params: PushBloggersParams): Promise<void> {
 	const { bloggers, avatarItems } = params
 
 	// 获取认证 token（自动从全局认证状态获取）
-	const token = await getAuthToken()
-
 	toast.info('正在获取分支信息...')
-	const refData = await getRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`)
+	const refData = await getRef('heads/main')
 	const latestCommitSha = refData.sha
 
 	const commitMessage = `更新博主列表`
@@ -43,7 +39,7 @@ export async function pushBloggers(params: PushBloggersParams): Promise<void> {
 				if (!uploadedHashes.has(hash)) {
 					const path = `public/images/blogger/${filename}`
 					const contentBase64 = await fileToBase64NoPrefix(avatarItem.file)
-					const blobData = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, contentBase64, 'base64')
+					const blobData = await createBlob(contentBase64, 'base64')
 					treeItems.push({
 						path,
 						mode: '100644',
@@ -61,7 +57,7 @@ export async function pushBloggers(params: PushBloggersParams): Promise<void> {
 
 	// Create blob for bloggers list.json
 	const bloggersJson = JSON.stringify(updatedBloggers, null, '\t')
-	const bloggersBlob = await createBlob(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, toBase64Utf8(bloggersJson), 'base64')
+	const bloggersBlob = await createBlob(toBase64Utf8(bloggersJson), 'base64')
 	treeItems.push({
 		path: 'src/app/bloggers/list.json',
 		mode: '100644',
@@ -71,15 +67,15 @@ export async function pushBloggers(params: PushBloggersParams): Promise<void> {
 
 	// Create tree
 	toast.info('正在创建文件树...')
-	const treeData = await createTree(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, treeItems, latestCommitSha)
+	const treeData = await createTree(treeItems, latestCommitSha)
 
 	// Create commit
 	toast.info('正在创建提交...')
-	const commitData = await createCommit(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, commitMessage, treeData.sha, [latestCommitSha])
+	const commitData = await createCommit(commitMessage, treeData.sha, [latestCommitSha])
 
 	// Update branch reference
 	toast.info('正在更新分支...')
-	await updateRef(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, `heads/${GITHUB_CONFIG.BRANCH}`, commitData.sha)
+	await updateRef('heads/main', commitData.sha)
 
 	toast.success('发布成功！')
 }

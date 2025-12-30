@@ -8,7 +8,7 @@ import { useAuthStore } from '@/hooks/use-auth'
 
 export function usePublish() {
 	const { loading, setLoading, form, cover, images, mode, originalSlug } = useWriteStore()
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuthenticated } = useAuthStore()
 
 	const onChoosePrivateKey = useCallback(
 		async (file: File) => {
@@ -57,7 +57,7 @@ export function usePublish() {
 	}, [form.slug, originalSlug, setLoading])
 
 	return {
-		isAuth,
+		isAuthenticated,
 		loading,
 		onChoosePrivateKey,
 		onPublish,

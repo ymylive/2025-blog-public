@@ -17,14 +17,14 @@ const fetcher = async (url: string) => {
 }
 
 export function useBlogIndex() {
-	const { isAuth } = useAuthStore()
+	const { isAuthenticated } = useAuthStore()
 	const { data, error, isLoading } = useSWR<BlogIndexItem[]>('/blogs/index.json', fetcher, {
 		revalidateOnFocus: false,
 		revalidateOnReconnect: true
 	})
 
 	let result = data || []
-	if (!isAuth) {
+	if (!isAuthenticated) {
 		result = result.filter(item => !item.hidden)
 	}
 

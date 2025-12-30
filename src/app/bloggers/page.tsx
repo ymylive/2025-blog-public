@@ -19,9 +19,7 @@ export default function Page() {
 	const [editingBlogger, setEditingBlogger] = useState<Blogger | null>(null)
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 	const [avatarItems, setAvatarItems] = useState<Map<string, AvatarItem>>(new Map())
-	const keyInputRef = useRef<HTMLInputElement>(null)
-
-	const { isAuth, setPrivateKey } = useAuthStore()
+	const { isAuthenticated } = useAuthStore()
 	const { siteContent } = useConfigStore()
 	const hideEditButton = siteContent.hideEditButton ?? false
 
@@ -56,24 +54,19 @@ export default function Page() {
 		}
 	}
 
-	const handleChoosePrivateKey = async (file: File) => {
-		try {
-			const text = await file.text()
-			setPrivateKey(text)
-			// 选择文件后自动保存
-			await handleSave()
-		} catch (error) {
+	 catch (error) {
 			console.error('Failed to read private key:', error)
 			toast.error('读取密钥文件失败')
 		}
 	}
 
 	const handleSaveClick = () => {
-		if (!isAuth) {
-			keyInputRef.current?.click()
-		} else {
-			handleSave()
+		if (!isAuthenticated) {
+			toast.error('请先登录')
+			return
 		}
+		handleSave()
+	}
 	}
 
 	const handleSave = async () => {
@@ -103,7 +96,7 @@ export default function Page() {
 		setIsEditMode(false)
 	}
 
-	const buttonText = isAuth ? '保存' : '导入密钥'
+	const buttonText = isAuthenticated ? '保存' : '请先登录'
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {

@@ -1,54 +1,59 @@
 import { create } from 'zustand'
-import { clearAllAuthCache, getAuthToken as getToken, hasAuth as checkAuth, getPemFromCache, savePemToCache } from '@/lib/auth'
-import { useConfigStore } from '@/app/(home)/stores/config-store'
+
 interface AuthStore {
 	// State
-	isAuth: boolean
-	privateKey: string | null
+	isAuthenticated: boolean
+	username: string | null
 
 	// Actions
-	setPrivateKey: (key: string) => void
-	clearAuth: () => void
-	refreshAuthState: () => void
-	getAuthToken: () => Promise<string>
+	login: (username: string, password: string, totpCode: string) => Promise<void>
+	logout: () => Promise<void>
+	checkSession: () => Promise<void>
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
-	isAuth: false,
-	privateKey: null,
+	isAuthenticated: false,
+	username: null,
 
-	setPrivateKey: async (key: string) => {
-		set({ isAuth: true, privateKey: key })
-		const { siteContent } = useConfigStore.getState()
-		if (siteContent?.isCachePem) {
-			await savePemToCache(key)
+	login: async (username: string, password: string, totpCode: string) => {
+		const res = await fetch('/api/auth/login', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ username, password, totpCode })
+		})
+
+		if (!res.ok) {
+			const data = await res.json()
+			throw new Error(data.error || 'Login failed')
 		}
+
+		const data = await res.json()
+		set({ isAuthenticated: true, username: data.username })
 	},
 
-	clearAuth: () => {
-		clearAllAuthCache()
-		set({ isAuth: false })
+	logout: async () => {
+		await fetch('/api/auth/logout', { method: 'POST' })
+		set({ isAuthenticated: false, username: null })
 	},
 
-	refreshAuthState: async () => {
-		set({ isAuth: await checkAuth() })
-	},
-
-	getAuthToken: async () => {
-		const token = await getToken()
-		get().refreshAuthState()
-		return token
+	checkSession: async () => {
+		try {
+			const res = await fetch('/api/auth/session')
+			if (res.ok) {
+				const data = await res.json()
+				if (data.authenticated) {
+					set({ isAuthenticated: true, username: data.username })
+					return
+				}
+			}
+		} catch (error) {
+			console.error('Session check failed:', error)
+		}
+		set({ isAuthenticated: false, username: null })
 	}
 }))
 
-getPemFromCache().then((key) => {
-	if (key) {
-		useAuthStore.setState({ privateKey: key })
-	}
-})
-
-checkAuth().then((isAuth) => {
-	if (isAuth) {
-		useAuthStore.setState({ isAuth })
-	}
-})
+// Check session on app load
+if (typeof window !== 'undefined') {
+	useAuthStore.getState().checkSession()
+}
