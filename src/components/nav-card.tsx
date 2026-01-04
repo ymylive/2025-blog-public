@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'motion/react'
 import { useCenterStore } from '@/hooks/use-center'
-import { CARD_SPACING } from '@/consts'
+import { CARD_SPACING, GITHUB_AVATAR_URL } from '@/consts'
 import ScrollOutlineSVG from '@/svgs/scroll-outline.svg'
 import ScrollFilledSVG from '@/svgs/scroll-filled.svg'
 import ProjectsFilledSVG from '@/svgs/projects-filled.svg'
@@ -139,7 +139,7 @@ export default function NavCard() {
 					)}
 
 					<Link className='flex items-center gap-3' href='/'>
-						<Image src='/images/avatar.jpg' alt='avatar' width={40} height={40} style={{ boxShadow: ' 0 12px 20px -5px #E2D9CE' }} className='rounded-full' />
+						<Image src={GITHUB_AVATAR_URL} alt='avatar' width={40} height={40} style={{ boxShadow: ' 0 12px 20px -5px #E2D9CE' }} className='rounded-full' />
 						{form === 'full' && <span className='font-averia mt-1 text-2xl leading-none font-medium'>{siteContent.meta.title}</span>}
 						{form === 'full' && <span className='text-brand mt-2 text-xs font-medium'>(开发中)</span>}
 					</Link>

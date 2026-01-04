@@ -1,0 +1,24 @@
+mixed-port: 7890
+allow-lan: false
+mode: rule
+log-level: info
+
+external-controller: 127.0.0.1:9090
+secret: change-me
+external-ui: ./metacubexd
+
+# Fill in your proxies or proxy providers below.
+proxies: []
+
+proxy-groups:
+  - name: Proxy
+    type: select
+    proxies:
+      - DIRECT
+
+rules:
+  - DOMAIN-SUFFIX,github.com,Proxy
+  - DOMAIN-SUFFIX,githubusercontent.com,Proxy
+  - DOMAIN-SUFFIX,githubassets.com,Proxy
+  - DOMAIN-SUFFIX,githubapp.com,Proxy
+  - MATCH,DIRECT

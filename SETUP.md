@@ -74,6 +74,11 @@ pnpm dev
    - 密码：qq159741（或你设置的密码）
    - 2FA 验证码：从 Google Authenticator 获取
 
+### Optional: GitHub proxy via Clash (local)
+
+- Set `GITHUB_PROXY_URL=http://127.0.0.1:7890` in `.env.local`
+- See `docs/local-clash.md` for Mihomo + MetaCubeXD setup
+
 ## VPS 生产环境设置
 
 ### 1. 在 VPS 上创建 .env 文件
@@ -98,6 +103,8 @@ chmod 600 .env
 
 ```bash
 python deploy.py
+
+Deployment reads VPS_HOST/VPS_USER/VPS_PASS from `.env.deploy` (see `.env.deploy.example`).
 ```
 
 部署脚本将：
@@ -122,13 +129,13 @@ python deploy.py
 ### GitHub 操作
 1. 前端调用 `/api/github/operations` 端点
 2. 后端验证 JWT token
-3. 使用服务器端私钥生成 GitHub token
+3. 使用服务器端 GitHub Token 调用 API
 4. 执行 GitHub API 操作
 5. 返回结果给前端
 
 ## 安全改进
 
-✅ GitHub 私钥永不暴露给浏览器
+✅ GitHub Token 永不暴露给浏览器
 ✅ 使用 bcrypt 进行密码哈希
 ✅ Google Authenticator 2FA 保护
 ✅ JWT token 存储在 HTTP-only cookie 中
@@ -142,8 +149,8 @@ python deploy.py
 - 解决：增加 `auth-utils.ts` 中的 `window` 参数到 3-4
 
 ### GitHub 操作返回 401
-- 原因：GitHub 私钥未正确加载
-- 解决：检查 `.env` 中的 `GITHUB_PRIVATE_KEY` 换行符（`\n`）
+- 原因：GitHub Token 无效或未加载
+- 解决：检查 `.env` 中的 `GITHUB_TOKEN` 是否正确，且权限包含 repo
 
 ### 部署脚本失败
 - 原因：VPS 上缺少 .env 文件

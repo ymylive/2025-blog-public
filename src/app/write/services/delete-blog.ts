@@ -1,6 +1,7 @@
 import { toast } from 'sonner'
 import { createBlob, createCommit, createTree, getRef, listRepoFilesRecursive, toBase64Utf8, TreeItem, updateRef } from '@/lib/github-client'
 import { removeBlogFromIndex } from '@/lib/blog-index'
+import { GITHUB_CONFIG } from '@/consts'
 
 export async function deleteBlog(slug: string): Promise<void> {
 	if (!slug) throw new Error('需要 slug')
@@ -25,7 +26,7 @@ export async function deleteBlog(slug: string): Promise<void> {
 	}))
 
 	toast.info('正在更新索引...')
-	const indexJson = await removeBlogFromIndex(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, slug, 'main')
+	const indexJson = await removeBlogFromIndex(slug, GITHUB_CONFIG.BRANCH)
 	const indexBlob = await createBlob(toBase64Utf8(indexJson), 'base64')
 	treeItems.push({
 		path: 'public/blogs/index.json',

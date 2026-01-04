@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/server/auth-middleware'
-import { getGitHubToken, GITHUB_CONFIG, GH_API } from '@/lib/server/github-server'
+import { getGitHubToken, GITHUB_CONFIG, GH_API, withGitHubProxy } from '@/lib/server/github-server'
 import type { TreeItem } from '@/lib/github-client'
+
+export const runtime = 'nodejs'
+
+const fetchGitHub = (url: string, init?: RequestInit) => fetch(url, withGitHubProxy(init))
 
 export async function POST(request: NextRequest) {
   // Check authentication
@@ -48,7 +52,7 @@ export async function POST(request: NextRequest) {
 
 async function handleGetRef(token: string, params: any) {
   const { ref } = params
-  const res = await fetch(
+  const res = await fetchGitHub(
     `${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/git/ref/${encodeURIComponent(ref)}`,
     {
       headers: {
@@ -65,7 +69,7 @@ async function handleGetRef(token: string, params: any) {
 
 async function handleCreateTree(token: string, params: any) {
   const { tree, baseTree } = params
-  const res = await fetch(`${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/git/trees`, {
+  const res = await fetchGitHub(`${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/git/trees`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -82,7 +86,7 @@ async function handleCreateTree(token: string, params: any) {
 
 async function handleCreateCommit(token: string, params: any) {
   const { message, tree, parents } = params
-  const res = await fetch(`${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/git/commits`, {
+  const res = await fetchGitHub(`${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/git/commits`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -99,7 +103,7 @@ async function handleCreateCommit(token: string, params: any) {
 
 async function handleUpdateRef(token: string, params: any) {
   const { ref, sha, force = false } = params
-  const res = await fetch(
+  const res = await fetchGitHub(
     `${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/git/refs/${encodeURIComponent(ref)}`,
     {
       method: 'PATCH',
@@ -118,7 +122,7 @@ async function handleUpdateRef(token: string, params: any) {
 
 async function handleCreateBlob(token: string, params: any) {
   const { content, encoding = 'base64' } = params
-  const res = await fetch(`${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/git/blobs`, {
+  const res = await fetchGitHub(`${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/git/blobs`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -135,7 +139,7 @@ async function handleCreateBlob(token: string, params: any) {
 
 async function handleGetFileSha(token: string, params: any) {
   const { path, branch } = params
-  const res = await fetch(
+  const res = await fetchGitHub(
     `${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`,
     {
       headers: {
@@ -155,7 +159,7 @@ async function handlePutFile(token: string, params: any) {
   const { path, contentBase64, message, branch } = params
 
   // Get existing file SHA if it exists
-  const shaRes = await fetch(
+  const shaRes = await fetchGitHub(
     `${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(branch)}`,
     {
       headers: {
@@ -167,7 +171,7 @@ async function handlePutFile(token: string, params: any) {
   )
   const sha = shaRes.status === 404 ? undefined : (await shaRes.json()).sha
 
-  const res = await fetch(
+  const res = await fetchGitHub(
     `${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${encodeURIComponent(path)}`,
     {
       method: 'PUT',
@@ -187,7 +191,7 @@ async function handlePutFile(token: string, params: any) {
 
 async function handleReadTextFile(token: string, params: any) {
   const { path, ref } = params
-  const res = await fetch(
+  const res = await fetchGitHub(
     `${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${encodeURIComponent(path)}?ref=${encodeURIComponent(ref)}`,
     {
       headers: {
@@ -215,7 +219,7 @@ async function handleListFiles(token: string, params: any) {
   const { path, ref } = params
 
   async function fetchPath(targetPath: string): Promise<string[]> {
-    const res = await fetch(
+    const res = await fetchGitHub(
       `${GH_API}/repos/${GITHUB_CONFIG.OWNER}/${GITHUB_CONFIG.REPO}/contents/${encodeURIComponent(targetPath)}?ref=${encodeURIComponent(ref)}`,
       {
         headers: {
@@ -249,3 +253,4 @@ async function handleListFiles(token: string, params: any) {
   const files = await fetchPath(path)
   return NextResponse.json({ files })
 }
+

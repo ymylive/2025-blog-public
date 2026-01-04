@@ -64,12 +64,14 @@ export async function getSessionFromCookie(): Promise<JWTPayload | null> {
  */
 export function setAuthCookie(token: string): string {
   const maxAge = 7 * 24 * 60 * 60 // 7 days in seconds
-  return `auth_token=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${maxAge}`
+  const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  return `auth_token=${token}; HttpOnly${secureFlag}; SameSite=Strict; Path=/; Max-Age=${maxAge}`
 }
 
 /**
  * Create Set-Cookie header to clear auth token
  */
 export function clearAuthCookie(): string {
-  return 'auth_token=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0'
+  const secureFlag = process.env.NODE_ENV === 'production' ? '; Secure' : ''
+  return `auth_token=; HttpOnly${secureFlag}; SameSite=Strict; Path=/; Max-Age=0`
 }

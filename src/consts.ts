@@ -14,3 +14,5 @@ export const GITHUB_CONFIG = {
 	APP_ID: process.env.NEXT_PUBLIC_GITHUB_APP_ID || '-',
 	ENCRYPT_KEY: process.env.NEXT_PUBLIC_GITHUB_ENCRYPT_KEY || 'wudishiduomejimo',
 } as const
+
+export const GITHUB_AVATAR_URL = `https://github.com/${GITHUB_CONFIG.OWNER}.png?size=200`

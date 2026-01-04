@@ -8,11 +8,28 @@ import subprocess
 import paramiko
 from pathlib import Path
 
-# VPS 配置
-VPS_HOST = "8.134.33.19"
-VPS_USER = "root"
-VPS_PASS = "Qq159741"
-REMOTE_PATH = "/www/wwwroot/2025-blog-public"
+
+def load_env_file(env_path: Path) -> None:
+    """Load key=value pairs from a local env file without overwriting existing env."""
+    if not env_path.exists():
+        return
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip())
+
+
+# Load optional deployment env file (ignored by git via .env*)
+load_env_file(Path(__file__).parent / ".env.deploy")
+
+# VPS config from environment
+VPS_HOST = os.getenv("VPS_HOST")
+VPS_USER = os.getenv("VPS_USER")
+VPS_PASS = os.getenv("VPS_PASS")
+VPS_PORT = int(os.getenv("VPS_PORT", "22"))
+REMOTE_PATH = os.getenv("VPS_PATH", "/www/wwwroot/2025-blog-public")
 
 # 要排除的文件/文件夹
 EXCLUDES = {
@@ -139,6 +156,11 @@ def clean_remote_directory(ssh: paramiko.SSHClient):
 
 def main():
     local_path = Path(__file__).parent
+    missing = [name for name, value in [("VPS_HOST", VPS_HOST), ("VPS_USER", VPS_USER), ("VPS_PASS", VPS_PASS)] if not value]
+    if missing:
+        print(f"Missing deployment env vars: {', '.join(missing)}")
+        print("Provide them via .env.deploy or environment variables.")
+        return
 
     # 先本地构建
     if not local_build():
@@ -153,7 +175,7 @@ def main():
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     
     try:
-        ssh.connect(VPS_HOST, username=VPS_USER, password=VPS_PASS)
+        ssh.connect(VPS_HOST, username=VPS_USER, password=VPS_PASS, port=VPS_PORT)
         print("SSH 连接成功!")
 
         # 确保远程目录存在

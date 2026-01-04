@@ -5,6 +5,7 @@ import type { ImageItem } from '../types'
 import { getFileExt } from '@/lib/utils'
 import { toast } from 'sonner'
 import { formatDateTimeLocal } from '../stores/write-store'
+import { GITHUB_CONFIG } from '@/consts'
 
 export type PushBlogParams = {
 	form: {
@@ -143,7 +144,7 @@ export async function pushBlog(params: PushBlogParams): Promise<void> {
 		cover: coverPath,
 		hidden: form.hidden,
 		category: form.category
-	})
+	}, GITHUB_CONFIG.BRANCH)
 	const indexBlob = await createBlob(toBase64Utf8(indexJson), 'base64')
 	treeItems.push({
 		path: 'public/blogs/index.json',

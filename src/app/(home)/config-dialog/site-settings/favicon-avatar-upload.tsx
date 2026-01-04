@@ -4,6 +4,7 @@ import { useRef } from 'react'
 import { toast } from 'sonner'
 import { hashFileSHA256 } from '@/lib/file-utils'
 import type { FileItem } from './types'
+import { GITHUB_AVATAR_URL } from '@/consts'
 
 interface FaviconAvatarUploadProps {
 	faviconItem: FileItem | null
@@ -72,7 +73,7 @@ export function FaviconAvatarUpload({ faviconItem, setFaviconItem, avatarItem, s
 					{avatarItem?.type === 'file' ? (
 						<img src={avatarItem.previewUrl} alt='avatar preview' className='h-full w-full object-cover' />
 					) : (
-						<img src='/images/avatar.jpg' alt='current avatar' className='h-full w-full object-cover' />
+						<img src={GITHUB_AVATAR_URL} alt='current avatar' className='h-full w-full object-cover' />
 					)}
 					<div className='pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 transition-opacity group-hover:opacity-100'>
 						<span className='text-xs text-white'>{avatarItem ? '更换' : '上传'}</span>

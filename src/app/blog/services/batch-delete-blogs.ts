@@ -1,6 +1,7 @@
 import { toast } from 'sonner'
 import { createBlob, createCommit, createTree, getRef, listRepoFilesRecursive, toBase64Utf8, type TreeItem, updateRef } from '@/lib/github-client'
 import { removeBlogsFromIndex } from '@/lib/blog-index'
+import { GITHUB_CONFIG } from '@/consts'
 
 export async function batchDeleteBlogs(slugs: string[]): Promise<void> {
 	const uniqueSlugs = Array.from(new Set(slugs.filter(Boolean)))
@@ -30,7 +31,7 @@ export async function batchDeleteBlogs(slugs: string[]): Promise<void> {
 	}
 
 	toast.info('正在更新索引...')
-	const indexJson = await removeBlogsFromIndex(token, GITHUB_CONFIG.OWNER, GITHUB_CONFIG.REPO, uniqueSlugs, 'main')
+	const indexJson = await removeBlogsFromIndex(uniqueSlugs, GITHUB_CONFIG.BRANCH)
 	const indexBlob = await createBlob(toBase64Utf8(indexJson), 'base64')
 	treeItems.push({
 		path: 'public/blogs/index.json',

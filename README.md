@@ -2,7 +2,10 @@
 
 > 最新引导说明：https://www.yysuni.com/blog/readme
 
-该项目使用 Github App 管理项目内容，请保管好后续创建的 **Private key**，不要上传到公开网上。
+This project uses admin login + Google 2FA; the GitHub Personal Access Token is stored only in server environment variables.
+
+Optional local GitHub proxy via Clash: see `docs/local-clash.md` and set `GITHUB_PROXY_URL`.
+
 
 ## 1. 安装
 
@@ -31,51 +34,18 @@ export const GITHUB_CONFIG = {
 
 大约 60 秒会部署完成，有一个直接 vercel 域名，如：https://2025-blog-public.vercel.app/
 
-到这里部署网站已经完成了，下一步创建 Github App
+Deployment is done. Next configure a GitHub Personal Access Token.
 
-## 3. 创建 Github App 链接仓库
+## 3. Configure GitHub Personal Access Token
 
-在 github 个人设置里面，找到最下面的 Developer Settings ，点击进入
-
-![](https://www.yysuni.com/blogs/readme/0abb3b592cbedad6.png)
-
-进入开发者页面，点击 **New Github App**
-
-*GitHub App name* 和 *Homepage URL* , 输入什么都不影响。Webhook 也关闭，不需要。
-
-![](https://www.yysuni.com/blogs/readme/71dcd9cf8ec967c0.png)
-
-只需要注意设置一个仓库 write 权限，其它不用。
-
-![](https://www.yysuni.com/blogs/readme/2be290016e56cd34.png)
-
-点击创建，谁能安装这个仓库这个选择无所谓。直接创建。
-
-![](https://www.yysuni.com/blogs/readme/aa002e6805ab2d65.png)
-
-
-### 创建密钥
-
-创建好 Github App 后会提示必须创建一个 **Private Key**，直接创建，会自动下载（不见了也不要紧，后面自己再创建再下载就行）。页面上有个 **App ID** 需要复制一下
-
-再切换到安装页面
-
-![](https://www.yysuni.com/blogs/readme/c122b1585bb7a46a.png)
-
-这里一定要只**授权当前项目**。
-
-![](https://www.yysuni.com/blogs/readme/2cf1cee3b04326f1.png)
-
-点击安装，就完成了 Github App 管理该仓库的权限设置了。下一步就是让前端知道推送那个项目，就是最开始提到的环境变量。（如果你不会设置环境变量，直接改仓库文件 `src/consts.ts` 也行。因为是公开的，所以环境变量意义也不大）
-
-直接输入这几个环境变量值就行，一般只用设置 OWNER 和 APP_ID。其它配置不用管，直接输入创建就行。
-
-![](https://www.yysuni.com/blogs/readme/c5a049d737848abf.png)
-
-设置完成后，需要手动再部署一次，让环境变量生效。
-* 可以直接 push 一次仓库代码会触发部署
-* 也可以手动选择创建一次部署
-![](https://www.yysuni.com/blogs/readme/59a802ed8d1c3a13.png)
+1. Visit: https://github.com/settings/tokens
+2. Click "Generate new token" -> "Generate new token (classic)"
+3. Set:
+   - Note: Blog CMS
+   - Expiration: No expiration
+   - Scopes: repo
+4. Copy the token (shown once)
+5. Set `GITHUB_TOKEN` in your deployment environment
 
 ## 4. 完成
 
