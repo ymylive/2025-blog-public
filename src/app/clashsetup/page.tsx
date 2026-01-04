@@ -197,10 +197,10 @@ export default function ClashSetupPage() {
               </h3>
               <div className="mt-4 flex flex-col gap-3 text-sm text-slate-700" style={{ fontFamily: 'var(--font-mono)' }}>
                 <a className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 transition hover:border-slate-400" href="/clash">
-                  MetaCubeXD UI -> /clash
+                  MetaCubeXD UI {'->'} /clash
                 </a>
                 <a className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 transition hover:border-slate-400" href="/clash-api" target="_blank">
-                  Clash API -> /clash-api
+                  Clash API {'->'} /clash-api
                 </a>
               </div>
             </div>

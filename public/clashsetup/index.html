@@ -1,0 +1,439 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Clash Subscription Import</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Spline+Sans:wght@400;600&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #0f172a;
+      --muted: #475569;
+      --accent: #f59e0b;
+      --accent-2: #0ea5e9;
+      --card: rgba(255, 255, 255, 0.78);
+      --border: rgba(148, 163, 184, 0.4);
+      --shadow: 0 30px 70px -45px rgba(15, 23, 42, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Spline Sans", system-ui, -apple-system, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at top, rgba(245, 158, 11, 0.18), transparent 45%),
+        linear-gradient(135deg, #f6f3ea 0%, #eef4fb 45%, #f9f1ef 100%);
+      min-height: 100vh;
+    }
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.45;
+      background-image:
+        linear-gradient(120deg, rgba(15, 23, 42, 0.08), transparent 40%),
+        linear-gradient(0deg, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+      background-size: 100% 100%, 32px 32px;
+    }
+
+    .orb {
+      position: fixed;
+      width: 280px;
+      height: 280px;
+      border-radius: 999px;
+      filter: blur(60px);
+      z-index: 0;
+    }
+
+    .orb.left {
+      left: -80px;
+      top: 60px;
+      background: rgba(15, 23, 42, 0.12);
+    }
+
+    .orb.right {
+      right: -40px;
+      top: 140px;
+      background: rgba(245, 158, 11, 0.25);
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 64px 24px 96px;
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    header h1 {
+      font-family: "Fraunces", "Times New Roman", serif;
+      font-weight: 700;
+      font-size: clamp(2.4rem, 3.6vw, 3.6rem);
+      margin: 12px 0 8px;
+    }
+
+    header p {
+      max-width: 640px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      color: rgba(51, 65, 85, 0.8);
+    }
+
+    .kicker span {
+      display: inline-block;
+      width: 42px;
+      height: 1px;
+      background: rgba(100, 116, 139, 0.7);
+    }
+
+    .grid {
+      display: grid;
+      gap: 24px;
+    }
+
+    @media (min-width: 960px) {
+      .grid {
+        grid-template-columns: 1.2fr 0.8fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      inset: -1px;
+      border: 1px dashed rgba(148, 163, 184, 0.3);
+      border-radius: 28px;
+      pointer-events: none;
+    }
+
+    .status-pill {
+      border-radius: 999px;
+      padding: 6px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-weight: 600;
+      color: rgba(30, 41, 59, 0.8);
+    }
+
+    .status-pill.loading {
+      background: rgba(251, 191, 36, 0.18);
+      border-color: rgba(251, 191, 36, 0.5);
+      color: #92400e;
+    }
+
+    .status-pill.success {
+      background: rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.5);
+      color: #065f46;
+    }
+
+    .status-pill.error {
+      background: rgba(244, 63, 94, 0.16);
+      border-color: rgba(244, 63, 94, 0.5);
+      color: #9f1239;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-weight: 600;
+      color: rgba(30, 41, 59, 0.8);
+      font-size: 0.9rem;
+    }
+
+    textarea,
+    input {
+      width: 100%;
+      border-radius: 18px;
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      padding: 12px 16px;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.88rem;
+      color: #0f172a;
+      background: rgba(248, 250, 252, 0.8);
+      box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.08);
+    }
+
+    input[type="password"] {
+      letter-spacing: 0.08em;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 18px;
+      padding: 14px 18px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-size: 0.7rem;
+      background: #0f172a;
+      color: white;
+      cursor: pointer;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 20px 40px -25px rgba(15, 23, 42, 0.9);
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 26px 50px -30px rgba(15, 23, 42, 0.7);
+    }
+
+    .btn:disabled {
+      background: #475569;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .ghost {
+      border: 1px solid rgba(148, 163, 184, 0.5);
+      background: transparent;
+      color: #475569;
+      flex: 0 0 auto;
+      padding: 12px 16px;
+    }
+
+    .summary {
+      border-radius: 18px;
+      border: 1px dashed rgba(148, 163, 184, 0.4);
+      background: rgba(248, 250, 252, 0.7);
+      padding: 16px;
+      font-size: 0.9rem;
+      color: rgba(71, 85, 105, 0.9);
+    }
+
+    .message {
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(255, 255, 255, 0.9);
+      padding: 12px 14px;
+      font-size: 0.92rem;
+      color: rgba(30, 41, 59, 0.9);
+    }
+
+    .side-card {
+      border-radius: 24px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(255, 255, 255, 0.75);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .side-card.dark {
+      background: #0f172a;
+      color: white;
+      border-color: rgba(30, 41, 59, 0.8);
+      box-shadow: 0 26px 60px -35px rgba(15, 23, 42, 0.9);
+    }
+
+    .link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-radius: 14px;
+      padding: 10px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+      background: rgba(248, 250, 252, 0.8);
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.85rem;
+      color: rgba(30, 41, 59, 0.9);
+      text-decoration: none;
+    }
+
+    .footer-note {
+      font-size: 0.85rem;
+      color: rgba(148, 163, 184, 0.9);
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="grain"></div>
+  <div class="orb left"></div>
+  <div class="orb right"></div>
+
+  <main>
+    <header>
+      <div class="kicker"><span></span>Clash Control</div>
+      <h1>Subscription Import Console</h1>
+      <p>Import a new Clash subscription YAML and restart mihomo in one step. This interface targets the VPS controller and keeps your UI settings intact.</p>
+    </header>
+
+    <div class="grid">
+      <section class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div>
+            <h2 style="margin:0;font-family:'Fraunces',serif;font-size:1.4rem;">Import Settings</h2>
+            <p style="margin:4px 0 0;color:var(--muted);font-size:0.9rem;">Target: mihomo on this VPS</p>
+          </div>
+          <span id="status-pill" class="status-pill">Ready</span>
+        </div>
+
+        <form id="import-form" style="margin-top:24px;display:flex;flex-direction:column;gap:18px;">
+          <label>
+            Subscription URL
+            <textarea id="subscription-url" rows="4"></textarea>
+          </label>
+
+          <label>
+            Import Token (optional if logged in)
+            <div style="display:flex;gap:10px;">
+              <input id="token" type="password" placeholder="qq159741" />
+              <button type="button" id="toggle-token" class="btn ghost" style="min-width:84px;">Show</button>
+            </div>
+          </label>
+
+          <div class="summary">
+            <strong>Operation summary</strong>
+            <ul style="margin:10px 0 0 16px; padding:0; display:flex; flex-direction:column; gap:6px;">
+              <li>Download subscription YAML</li>
+              <li>Inject controller and UI settings</li>
+              <li>Restart mihomo service</li>
+            </ul>
+          </div>
+
+          <div class="btn-row">
+            <button id="submit-btn" class="btn" type="submit">
+              <span>Apply Subscription</span>
+              <span style="opacity:0.7;">Run</span>
+            </button>
+          </div>
+
+          <div id="message" class="message" style="display:none;"></div>
+        </form>
+      </section>
+
+      <aside style="display:flex;flex-direction:column;gap:16px;">
+        <div class="side-card">
+          <h3 style="margin:0;font-family:'Fraunces',serif;font-size:1.1rem;">Quick Links</h3>
+          <a class="link" href="/clash">MetaCubeXD UI -> /clash</a>
+          <a class="link" href="/clash-api" target="_blank">Clash API -> /clash-api</a>
+        </div>
+        <div class="side-card dark">
+          <h3 style="margin:0;font-family:'Fraunces',serif;font-size:1.1rem;">WebSocket Endpoint</h3>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.85rem;">wss://cornna.xyz/clash-api/traffic</div>
+          <div class="footer-note">If the UI reports WebSocket errors, refresh after import or re-check the token.</div>
+        </div>
+        <div class="side-card">
+          <h3 style="margin:0;font-family:'Fraunces',serif;font-size:1.1rem;">Notes</h3>
+          <ul style="margin:0 0 0 16px; padding:0; display:flex; flex-direction:column; gap:6px;">
+            <li>HTTPS subscription URLs only.</li>
+            <li>Token defaults to the controller secret.</li>
+            <li>Restart usually completes in 1-2 seconds.</li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <script>
+    const DEFAULT_URL = "https://api.v1.mk/sub?target=clash&url=https%3A%2F%2Fnano.nachoneko.cn%2Fapi%2Fv1%2Fclient%2Fsubscribe%3Ftoken%3D0564faff9cfd13442873e71f9a235469&insert=false&config=https%3A%2F%2Fraw.githubusercontent.com%2FACL4SSR%2FACL4SSR%2Fmaster%2FClash%2Fconfig%2FACL4SSR_Online_Full_AdblockPlus.ini&emoji=true&list=false&xudp=false&udp=false&tfo=false&expand=true&scv=false&fdn=false&new_name=true";
+    const form = document.getElementById("import-form");
+    const urlInput = document.getElementById("subscription-url");
+    const tokenInput = document.getElementById("token");
+    const messageEl = document.getElementById("message");
+    const statusPill = document.getElementById("status-pill");
+    const submitBtn = document.getElementById("submit-btn");
+    const toggleBtn = document.getElementById("toggle-token");
+
+    urlInput.value = DEFAULT_URL;
+
+    function setStatus(state, message) {
+      statusPill.className = "status-pill";
+      if (state && state !== "idle") {
+        statusPill.classList.add(state);
+      }
+      statusPill.textContent = state === "loading" ? "Importing" : state === "success" ? "Imported" : state === "error" ? "Failed" : "Ready";
+      if (message) {
+        messageEl.textContent = message;
+        messageEl.style.display = "block";
+      } else {
+        messageEl.style.display = "none";
+      }
+    }
+
+    toggleBtn.addEventListener("click", () => {
+      const isHidden = tokenInput.type === "password";
+      tokenInput.type = isHidden ? "text" : "password";
+      toggleBtn.textContent = isHidden ? "Hide" : "Show";
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      setStatus("loading", "Pulling subscription and restarting mihomo...");
+      submitBtn.disabled = true;
+
+      try {
+        const res = await fetch("/api/clash/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            subscriptionUrl: urlInput.value.trim(),
+            token: tokenInput.value.trim()
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          setStatus("error", data?.error || "Import failed. Check token or URL.");
+          submitBtn.disabled = false;
+          return;
+        }
+
+        setStatus("success", "Subscription applied. Clash core restarted successfully.");
+        submitBtn.disabled = false;
+      } catch (err) {
+        setStatus("error", err?.message || "Import failed. Network error.");
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
