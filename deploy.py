@@ -39,6 +39,9 @@ EXCLUDES = {
     "__pycache__",
     ".cache",
     "deploy.py",
+    ".env.local",
+    ".env.deploy",
+    "clash",
 }
 
 # 要同步的文件扩展名（如果为空则同步所有）
