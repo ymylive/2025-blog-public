@@ -254,7 +254,7 @@ def main():
         # 在远程服务器上安装依赖并重启
         print("\n在 VPS 上安装依赖并重启服务...")
         stdin, stdout, stderr = ssh.exec_command(
-            f"cd {REMOTE_PATH} && pnpm install --frozen-lockfile && (pm2 delete 2025-blog || true) && pm2 start 'pnpm start -- -p {APP_PORT}' --name 2025-blog"
+            f"cd {REMOTE_PATH} && pnpm install --frozen-lockfile && (pm2 delete 2025-blog || true) && pm2 start 'pnpm exec next start -p {APP_PORT}' --name 2025-blog"
         )
         out = stdout.read().decode("utf-8", errors="ignore")
         if out:
