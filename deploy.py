@@ -6,6 +6,7 @@
 import os
 import subprocess
 import paramiko
+import tarfile
 from pathlib import Path
 
 
@@ -42,6 +43,7 @@ EXCLUDES = {
     ".env.local",
     ".env.deploy",
     "clash",
+    ".deploy",
 }
 
 # 要同步的文件扩展名（如果为空则同步所有）
@@ -102,6 +104,35 @@ def sync_files(sftp: paramiko.SFTPClient, local_base: Path, remote_base: str):
         else:
             print(f"上传: {item.relative_to(local_base)}")
             sftp.put(str(item), remote_item)
+
+
+def create_deploy_archive(local_path: Path) -> Path:
+    """Create a tar.gz archive with only the runtime-required files."""
+    archive_dir = local_path / ".deploy"
+    archive_dir.mkdir(exist_ok=True)
+    archive_path = archive_dir / "deploy.tar.gz"
+    if archive_path.exists():
+        archive_path.unlink()
+
+    include_items = [
+        ".next",
+        "public",
+        "package.json",
+        "pnpm-lock.yaml",
+        "next.config.ts",
+        "open-next.config.ts",
+        "tsconfig.json",
+        "next-env.d.ts",
+        "wrangler.toml",
+    ]
+
+    with tarfile.open(archive_path, "w:gz") as tar:
+        for item in include_items:
+            target = local_path / item
+            if target.exists():
+                tar.add(target, arcname=item)
+
+    return archive_path
 
 
 def local_build():
@@ -168,6 +199,9 @@ def main():
     # 先本地构建
     if not local_build():
         return
+
+    print("\n准备部署包...")
+    archive_path = create_deploy_archive(local_path)
     
     print("\n" + "=" * 50)
     print(f"连接到 {VPS_HOST}...")
@@ -201,13 +235,20 @@ def main():
         # 清理云端旧文件（保留 .env）
         clean_remote_directory(ssh)
         
-        # 创建 SFTP 客户端
+        # Create SFTP client
         sftp = ssh.open_sftp()
-        
-        print(f"\n开始同步文件到 {REMOTE_PATH}...")
-        sync_files(sftp, local_path, REMOTE_PATH)
-        
-        print("\n文件同步完成!")
+
+        print(f"\n上传部署包到 {REMOTE_PATH}...")
+        remote_archive = f"{REMOTE_PATH}/.deploy.tar.gz"
+        sftp.put(str(archive_path), remote_archive)
+        sftp.close()
+
+        print("\n解压部署包...")
+        stdin, stdout, stderr = ssh.exec_command(f"tar -xzf {remote_archive} -C {REMOTE_PATH} && rm -f {remote_archive}")
+        stdout.read()
+        err = stderr.read().decode()
+        if err:
+            print(f"解压警告: {err}")
         
         # 在远程服务器上安装依赖并重启
         print("\n在 VPS 上安装依赖并重启服务...")
