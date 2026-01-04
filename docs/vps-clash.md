@@ -22,6 +22,15 @@ python deploy.py --target clash
 ## 3) Open the UI
 Visit `http://<vps-ip>:9090/ui` and enter the secret when prompted.
 
+## 4) Subscription import frontend
+The blog now exposes a lightweight importer UI at:
+`https://<your-domain>/clashsetup`
+
+Required `.env` values on the VPS:
+- `CLASH_SECRET` (same as mihomo secret)
+- `CLASH_IMPORT_TOKEN` (token accepted by the importer; defaults to `CLASH_SECRET`)
+- `CLASH_CONFIG_PATH` (default `/etc/mihomo/config.yaml`)
+
 ## Notes
 - The script updates the VPS blog `.env` with `GITHUB_PROXY_URL=http://127.0.0.1:7890`.
 - If you expose `9090`, keep a strong `CLASH_SECRET` or firewall it to your IP.
