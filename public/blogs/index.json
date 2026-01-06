@@ -1,1 +1,11 @@
-[]
+[
+  {
+    "slug": "test",
+    "title": "test",
+    "tags": [],
+    "date": "2026-01-06T12:43",
+    "summary": "",
+    "hidden": false,
+    "category": ""
+  }
+]
